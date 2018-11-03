@@ -114,6 +114,12 @@ class HrHolidays(models.Model):
             ).astimezone(tz.tzutc())
             record.date_to = fields.Datetime.to_string(dt)
 
+    @api.onchange('holiday_status_id')
+    def onchange_leave_type(self):
+        if self.holiday_status_id:
+            if self.holiday_status_id.compute_full_days is True:
+                self.from_full_day, self.to_full_day = True, True
+
     @api.onchange('date_from_full')
     def _onchange_date_from_full(self):
         """As inverse methods only works on save, we have to add an onchange"""
