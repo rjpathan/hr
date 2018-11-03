@@ -150,6 +150,7 @@ class HrHolidaysPublicLine(models.Model):
     )
     variable_date = fields.Boolean('Date may change', oldname='variable',
                                    default=True)
+    date_check = fields.Boolean('Date Check')
     state_ids = fields.Many2many(
         'res.country.state',
         'hr_holiday_public_state_rel',
@@ -158,6 +159,32 @@ class HrHolidaysPublicLine(models.Model):
         'Related States'
     )
 
+    @api.model
+    def create(self, vals):
+        if not vals: vals = {}
+        if 'variable_date' in vals:
+            if vals['variable_date'] is False:
+                vals['date_check'] = True
+            else:
+                vals['date_check'] = False
+        return super(HrHolidaysPublicLine, self).create(vals)
+
+    @api.multi
+    def write(self, vals):
+        for line in self:
+            if not vals: vals = {}
+            if 'variable_date' in vals:
+                if vals['variable_date'] is False:
+                    vals['date_check'] = True
+                else:
+                    vals['date_check'] = False
+            return super(HrHolidaysPublicLine, line).write(vals)
+
+    @api.onchange('variable_date')
+    def onchange_variable_date(self):
+        if self.variable_date is True:
+            self.date_check = False
+            
     @api.multi
     @api.constrains('date', 'state_ids')
     def _check_date_state(self):
